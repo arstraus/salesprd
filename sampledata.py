@@ -31,7 +31,7 @@ def add_noise(value, noise_level=0.50):
     """Add random noise to a value"""
     return value * (1 + (random.random() - 0.5) * noise_level)
 
-def generate_sales_data(num_reps=500, segment_params=None):
+def generate_sales_data(num_reps=500, segment_params=None, seed=42, noise_level=0.50):
     """
     Generate sample sales data.
     
@@ -44,13 +44,19 @@ def generate_sales_data(num_reps=500, segment_params=None):
                 'ramp_period': int
             }
         }
+    seed (int): Random seed for reproducibility
+    noise_level (float): Amount of random variation to add (0.0 to 1.0)
     """
+    # Set random seed for reproducibility
+    random.seed(seed)
+    np.random.seed(seed)
+    
     # Constants
     start_date = datetime(2022, 1, 1)
     markets = ['AMS', 'EMEA', 'APJ']
     theaters = [f'Market-{chr(65+i)}' for i in range(26)]  # Market-A through Market-Z
     regions = [f'Theater-{chr(65+i)}' for i in range(26)]  # Theater-A through Theater-Z
-    territory_profiles = ['Acquisition', 'Expansion', 'Retention']  # Added territory profiles
+    territory_profiles = ['Acquisition', 'Expansion', 'Hybrid']  # Added territory profiles
 
     # Use default parameters if none provided
     if segment_params is None:
@@ -84,7 +90,7 @@ def generate_sales_data(num_reps=500, segment_params=None):
 
         # Add noise and store values
         for month in range(36):
-            value = max(0, round(add_noise(monthly_values[month])))
+            value = max(0, round(add_noise(monthly_values[month], noise_level)))
             rep[f'Month{month + 1}'] = value
 
         # Calculate trailing values without annualization
@@ -106,12 +112,39 @@ def generate_sales_data(num_reps=500, segment_params=None):
     return df
 
 if __name__ == "__main__":
-    # Set random seed for reproducibility
-    random.seed(42)
-    np.random.seed(42)
-    
     # Generate data for 500 reps
     df = generate_sales_data(num_reps=500)
     
     # Save to CSV
     df.to_csv('sales_data.csv', index=False)
+    
+    # Print verification statistics
+    print("\nVerifying ramp achievement:")
+    for segment in ['Commercial', 'Enterprise', 'Majors']:
+        segment_df = df[df['Segment'] == segment]
+        ramp_period = {'Commercial': 6, 'Enterprise': 9, 'Majors': 12}[segment]
+        target = {'Commercial': 900000, 'Enterprise': 1500000, 'Majors': 2500000}[segment]
+        target_monthly = target / 12
+        
+        # Calculate prorated target for this ramp period
+        prorated_target = (target / 12) * ramp_period
+        
+        # Check trailing performance at ramp period
+        trailing_at_ramp = segment_df[f'Trailing{ramp_period}'].mean()
+        target_achievement = (trailing_at_ramp / prorated_target) * 100
+        
+        print(f"\n{segment}:")
+        print(f"Number of Reps: {len(segment_df)}")  # Added count of reps per segment
+        print(f"Annual Target: ${target:,.0f}")
+        print(f"Monthly Target: ${target_monthly:,.0f}")
+        print(f"Prorated Target at {ramp_period} months: ${prorated_target:,.0f}")
+        print(f"Average at month {ramp_period}: ${trailing_at_ramp:,.0f}")
+        print(f"Achievement at ramp: {target_achievement:.1f}%")
+        
+        # Show average monthly bookings
+        print("\nMonthly progression (average bookings):")
+        for month in range(1, 13):
+            col_name = f'Month{month}'
+            if col_name in segment_df.columns:
+                avg_booking = segment_df[col_name].mean()
+                print(f"Month {month}: ${avg_booking:,.0f}")

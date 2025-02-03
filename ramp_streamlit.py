@@ -230,11 +230,13 @@ def analyze_ramp(df, segments=None, markets=None, theaters=None, regions=None,
     
     return fig, metrics
 
-def generate_sample_data(num_reps, segment_params):
+def generate_sample_data(num_reps, segment_params, seed=42, noise_level=0.50):
     """Generate sample data with custom parameters"""
     df = generate_sales_data(
         num_reps=num_reps,
-        segment_params=segment_params
+        segment_params=segment_params,
+        seed=seed,
+        noise_level=noise_level
     )
     
     # Create a temporary file to store the generated data
@@ -416,14 +418,38 @@ def main():
     with tab2:
         st.header("Sample Data Generation")
         
-        # Number of reps slider
-        num_reps = st.slider(
-            "Number of Sales Representatives",
-            min_value=10,
-            max_value=1000,
-            value=500,
-            step=10
-        )
+        # Create two columns for general settings
+        gen_col1, gen_col2 = st.columns(2)
+        
+        with gen_col1:
+            # Number of reps slider
+            num_reps = st.slider(
+                "Number of Sales Representatives",
+                min_value=10,
+                max_value=1000,
+                value=500,
+                step=10
+            )
+            
+            # Random seed input
+            seed = st.number_input(
+                "Random Seed",
+                min_value=1,
+                max_value=99999,
+                value=42,
+                help="Set a seed for reproducible data generation"
+            )
+            
+        with gen_col2:
+            # Noise level slider
+            noise_level = st.slider(
+                "Noise Level",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.5,
+                step=0.05,
+                help="Amount of random variation in the data (0=none, 1=maximum)"
+            )
         
         # Segment configuration
         st.subheader("Segment Parameters")
@@ -459,7 +485,7 @@ def main():
         if st.button("Generate Sample Data"):
             try:
                 with st.spinner("Generating sample data..."):
-                    sample_file = generate_sample_data(num_reps, segment_params)
+                    sample_file = generate_sample_data(num_reps, segment_params, seed=seed, noise_level=noise_level)
                     
                     # Read the generated file
                     with open(sample_file, 'rb') as f:

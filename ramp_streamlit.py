@@ -270,9 +270,184 @@ def main():
     st.title("Sales Ramp Analysis Tool")
     
     # Add main tabs
-    tab1, tab2, tab3 = st.tabs(["Analysis", "Generate Sample Data", "Documentation"])
+    tab1, tab2, tab3 = st.tabs(["Documentation", "Analysis", "Generate Sample Data"])
     
     with tab1:
+        st.header("Documentation")
+        
+        # Add table of contents
+        st.markdown("""
+        ## Table of Contents
+        1. [Overview](#overview)
+        2. [Getting Started](#getting-started)
+        3. [Data Requirements](#data-requirements)
+        4. [Features](#features)
+        5. [Analysis Methods](#analysis-methods)
+        6. [Sample Data Generation](#sample-data-generation)
+        7. [Troubleshooting](#troubleshooting)
+        8. [Best Practices](#best-practices)
+        """)
+        
+        # Create expandable sections for each major topic
+        with st.expander("Overview", expanded=True):
+            st.markdown("""
+            The Sales Ramp Analysis Tool is an application designed to analyze and visualize 
+            sales representative productivity data. It helps organizations understand ramp times, performance 
+            patterns, and  effectiveness across different segments and regions.
+
+            ### Key Functionality
+            - Analyze rep ramp performance
+            - Appy various regression models to determine ramp periods and target productivity
+            - Generate sample data to experiment with the tool
+            """)
+
+        with st.expander("Getting Started"):
+            st.markdown("""
+            ### Prerequisites
+            - Sales performance data in CSV format
+            - Monthly booking values for each sales representative
+            - Territory and segment classifications
+
+            ### Quick Start
+            1. Download the template CSV from the sidebar
+            2. Format your data according to the template
+            3. Upload your CSV file
+            4. Select your analysis parameters
+            5. Explore the visualizations and metrics
+            """)
+
+        with st.expander("Data Requirements"):
+            st.markdown("""
+            ### Required Columns
+            - **EID**: Unique identifier for each sales representative
+            - **StartDate**: Rep's start date (YYYY-MM-DD format)
+            - **Market**: Geographic market designation
+            - **Theater**: Sub-market designation
+            - **Region**: Regional designation
+            - **Segment**: Business segment (e.g., Commercial, Enterprise, Majors)
+            - **Territory_Profile**: Territory type (e.g., Acquisition, Expansion)
+            - **Month1-Month36**: Monthly booking values
+            - **Trailing1-Trailing36**: Trailing 12-month booking values
+
+            ### Data Format Guidelines
+            - All monetary values should be in the same currency
+            - Dates must be in YYYY-MM-DD format
+            - No commas in numeric values
+            - Missing values should be left empty or marked as 0
+            - Text fields should not contain special characters
+            """)
+
+        with st.expander("Analysis Methods"):
+            st.markdown("""
+            ### Growth Models
+
+            #### Logistic Model
+            - S-shaped curve modeling
+            - Best for typical ramp patterns
+            - Formula: y = L / (1 + exp(-k(x - x0)))
+            - Parameters:
+                - L: Maximum achievement level
+                - k: Growth rate
+                - x0: Midpoint of growth
+
+            #### Gompertz Model
+            - Asymmetric growth curve
+            - Useful for accelerated ramp patterns
+            - Formula: y = a * exp(-b * exp(-cx))
+            - Parameters:
+                - a: Asymptote
+                - b: Displacement
+                - c: Growth rate
+
+            #### Linear Model
+            - Simple linear progression
+            - Best for steady growth patterns
+            - Formula: y = ax + b
+            - Parameters:
+                - a: Growth rate
+                - b: Initial value
+
+            ### Metrics Calculation
+            - Ramp time to target percentage
+            - R-squared value for model fit
+            - Root Mean Square Error (RMSE)
+            - Target value achievement
+            """)
+
+        with st.expander("Sample Data Generation"):
+            st.markdown("""
+            ### Configuration Options
+            - Number of sales representatives
+            - Segment parameters
+                - Annual targets
+                - Ramp periods
+            - Noise level for variation
+            - Random seed for reproducibility
+
+            ### Segment Parameters
+            #### Commercial
+            - Default annual target: $900,000
+            - Typical ramp period: 6 months
+            - Faster ramp, lower target
+
+            #### Enterprise
+            - Default annual target: $1,500,000
+            - Typical ramp period: 9 months
+            - Moderate ramp, medium target
+
+            #### Majors
+            - Default annual target: $2,500,000
+            - Typical ramp period: 12 months
+            - Slower ramp, higher target
+            """)
+
+        with st.expander("Troubleshooting"):
+            st.markdown("""
+            ### Common Issues
+            1. **Data Upload Errors**
+                - Check CSV format
+                - Verify column names match template
+                - Ensure date format is correct
+                - Remove special characters
+
+            2. **Analysis Errors**
+                - Verify data completeness
+                - Check for outliers
+                - Ensure sufficient data points
+                - Validate segment assignments
+
+            3. **Visualization Issues**
+                - Refresh browser
+                - Clear cache
+                - Reduce data size if too large
+                - Check for missing values
+            """)
+
+        with st.expander("Best Practices"):
+            st.markdown("""
+            ### Data Preparation
+            1. Clean and validate data before upload
+            2. Use consistent naming conventions
+            3. Remove inactive or incomplete records
+            4. Verify territory assignments
+
+            ### Analysis Configuration
+            1. Start with default parameters
+            2. Adjust target percentages based on business goals
+            3. Compare multiple growth models
+            4. Use appropriate date ranges
+
+            ### Interpretation Guidelines
+            1. Consider market conditions
+            2. Account for seasonality
+            3. Compare similar segments
+            4. Look for patterns across territories
+
+            For additional support or feature requests, please contact your system administrator 
+            or the development team.
+            """)
+
+    with tab2:
         # Sidebar for analysis tab
         st.sidebar.header("📊 Sales Ramp Analysis")
         
@@ -415,7 +590,7 @@ def main():
                 fig_dist = plot_performance(processed_df, trailing_cols, 'distribution')
                 st.pyplot(fig_dist)
 
-    with tab2:
+    with tab3:
         st.header("Sample Data Generation")
         
         # Create two columns for general settings
@@ -517,42 +692,6 @@ def main():
             except Exception as e:
                 st.error(f"Error generating sample data: {str(e)}")
     
-    with tab3:
-        st.header("Documentation")
-        st.markdown("""
-        ### Overview
-        This tool analyzes sales representative performance data to understand ramp times and patterns 
-        across different segments and territories.
-        
-        ### Key Features
-        - Upload and analyze your sales data
-        - Generate sample data with custom parameters
-        - Visualize performance trends
-        - Calculate ramp metrics
-        - Export results
-        
-        ### Data Requirements
-        Your CSV file should contain:
-        - EID (unique rep identifier)
-        - StartDate
-        - Market, Theater, and Region designations
-        - Segment information
-        - Monthly performance columns (Month1-Month36)
-        - Trailing performance columns (Trailing1-Trailing36)
-        
-        ### Analysis Options
-        - Multiple growth models (Logistic, Gompertz, Linear)
-        - Customizable ramp target percentage
-        - Flexible time range selection
-        - Segment and territory filtering
-        
-        ### Sample Data Generation
-        Use the "Generate Sample Data" tab to:
-        - Create synthetic data for testing
-        - Customize number of reps
-        - Adjust segment parameters
-        - Set different ramp periods
-        """)
 
 if __name__ == "__main__":
     main()

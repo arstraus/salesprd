@@ -216,7 +216,45 @@ def main():
     
     with tab1:
         st.header("Documentation")
-        [Documentation content...]
+        
+        st.markdown("""
+        ## Overview
+        The Sales Ramp Analysis Tool helps analyze and visualize sales representative 
+        productivity data. It provides insights into ramp times, performance patterns, 
+        and effectiveness across different segments and regions.
+
+        ### Key Features
+        - Multiple growth model analysis (Linear, Logistic, Gompertz)
+        - Interactive data visualization 
+        - Customizable analysis parameters
+        - Automated data validation
+        - Sample data generation
+        
+        ### Data Requirements
+        Upload a CSV file with the following columns:
+        - EID: Unique identifier for each sales representative
+        - StartDate: Rep's start date (YYYY-MM-DD format)
+        - Market: Geographic market designation
+        - Theater: Sub-market designation
+        - Region: Regional designation
+        - Segment: Business segment (e.g., Commercial, Enterprise)
+        - Territory_Profile: Territory type
+        - Month1-Month36: Monthly booking values
+        - Trailing1-Trailing36: Trailing 12-month booking values
+        
+        ### Analysis Methods
+        The tool provides three types of growth models:
+        1. **Logistic Model**: S-shaped curve modeling (best for typical ramp patterns)
+        2. **Gompertz Model**: Asymmetric growth curve (useful for accelerated patterns)
+        3. **Linear Model**: Simple linear progression (best for steady growth)
+        
+        ### Getting Started
+        1. Download the template CSV from the sidebar
+        2. Format your data according to the template
+        3. Upload your CSV file
+        4. Select your analysis parameters
+        5. Explore the visualizations and metrics
+        """)
     
     with tab2:
         st.sidebar.header("📊 Sales Ramp Analysis")

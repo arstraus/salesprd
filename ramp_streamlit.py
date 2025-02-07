@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 from datetime import datetime
 from scipy.optimize import curve_fit
 from scipy import stats
@@ -73,31 +73,6 @@ def prepare_data(df, verbose=True):
         st.write(f"Average trailing booking: ${df[trailing_cols].mean().mean():,.2f}")
     
     return df, month_cols, trailing_cols
-
-def plot_performance(df, cols, plot_type='monthly', segment=None):
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    if plot_type == 'monthly':
-        for segment in df['Segment'].unique():
-            segment_df = df[df['Segment'] == segment]
-            monthly_mean = segment_df[cols].mean()
-            plt.plot(range(1, len(cols) + 1), monthly_mean, label=segment)
-        plt.title('Monthly Performance by Segment')
-        plt.xlabel('Month of Tenure')
-    else:
-        final_performance = df[cols[-1]]
-        if segment:
-            final_performance = df[df['Segment'] == segment][cols[-1]]
-        sns.histplot(final_performance, bins=30)
-        plt.title(f'Distribution of Final Performance{" - " + segment if segment else ""}')
-        plt.xlabel('Trailing 12-Month Bookings ($)')
-    
-    plt.ylabel('Monthly Bookings ($)' if plot_type == 'monthly' else 'Count')
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
-    
-    return fig
 
 def analyze_ramp(df, segments=None, markets=None, theaters=None, regions=None, 
                territories=None, date_range=(1, 36), ramp_target_pct=90, model_type='logistic'):
@@ -210,6 +185,35 @@ def create_sample_template():
     
     return pd.DataFrame(sample_data)
 
+def plot_distribution(df, trailing_month, bin_size=50):
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Get the trailing month data
+    col_name = f'Trailing{trailing_month}'
+    data = df[col_name]
+    
+    # Calculate number of bins based on data range and bin size
+    data_range = data.max() - data.min()
+    n_bins = int(data_range / bin_size)
+    
+    # Create histogram
+    plt.hist(data, bins=n_bins, density=True, alpha=0.7, color='skyblue')
+    plt.hist(data, bins=n_bins, density=True, histtype='step', color='navy')
+    
+    # Add labels and title
+    plt.title(f'Distribution of Trailing {trailing_month}-Month Bookings\nBin Size: ${bin_size:,.0f}')
+    plt.xlabel('Trailing Bookings ($)')
+    plt.ylabel('Frequency')
+    
+    # Format x-axis to show currency
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f'${x:,.0f}'))
+    
+    # Add grid
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    return fig
+
 def main():
     st.title("Sales Ramp Analysis Tool")
     tab1, tab2, tab3 = st.tabs(["Documentation", "Analysis", "Generate Sample Data"])
@@ -300,29 +304,66 @@ def main():
                 ramp_target = st.slider("Ramp Target Percentage", 50, 100, 90, 5)
                 date_range = st.slider("Analysis Time Range (Months)", 1, 36, (1, 36))
             
-            st.write("### Performance Visualizations")
-            viz_tab1, viz_tab2, viz_tab3 = st.tabs(["Ramp Analysis", "Monthly Trends", 
-                                                   "Performance Distribution"])
+            viz_tab1, viz_tab2 = st.tabs(["Ramp Analysis", "Distribution Analysis"])
             
             with viz_tab1:
+                st.write("### Performance Visualization")
                 fig_ramp, metrics = analyze_ramp(processed_df, selected_segments, selected_markets,
                                                selected_theaters, selected_regions, 
                                                model_type=model_type, ramp_target_pct=ramp_target,
                                                date_range=date_range)
-                st.pyplot(fig_ramp)
-                st.write("### Ramp Metrics")
-                metrics_df = pd.DataFrame(metrics).T
-                st.dataframe(metrics_df)
-                csv = metrics_df.to_csv().encode('utf-8')
-                st.download_button("Download Metrics CSV", csv, "ramp_metrics.csv", "text/csv")
+                if fig_ramp is not None:
+                    st.pyplot(fig_ramp)
+                    st.write("### Ramp Metrics")
+                    metrics_df = pd.DataFrame(metrics).T
+                    st.dataframe(metrics_df)
+                    csv = metrics_df.to_csv().encode('utf-8')
+                    st.download_button("Download Metrics CSV", csv, "ramp_metrics.csv", "text/csv")
             
             with viz_tab2:
-                fig_monthly = plot_performance(processed_df, month_cols, 'monthly')
-                st.pyplot(fig_monthly)
-            
-            with viz_tab3:
-                fig_dist = plot_performance(processed_df, trailing_cols, 'distribution')
-                st.pyplot(fig_dist)
+                st.write("### Distribution Analysis")
+                dist_col1, dist_col2 = st.columns(2)
+                
+                with dist_col1:
+                    trailing_month = st.slider("Select Trailing Month", 1, 36, 12)
+                
+                with dist_col2:
+                    # Calculate a reasonable default bin size based on data range
+                    col_name = f'Trailing{trailing_month}'
+                    data_range = processed_df[col_name].max() - processed_df[col_name].min()
+                    default_bin_size = int(data_range / 50)  # Default to 50 bins
+                    bin_size = st.number_input("Bin Size ($)", 
+                                             min_value=100,
+                                             max_value=int(data_range),
+                                             value=default_bin_size,
+                                             step=100)
+                
+                # Apply filters
+                filtered_df = processed_df.copy()
+                if selected_markets:
+                    filtered_df = filtered_df[filtered_df['Market'].isin(selected_markets)]
+                if selected_theaters:
+                    filtered_df = filtered_df[filtered_df['Theater'].isin(selected_theaters)]
+                if selected_regions:
+                    filtered_df = filtered_df[filtered_df['Region'].isin(selected_regions)]
+                if selected_segments:
+                    filtered_df = filtered_df[filtered_df['Segment'].isin(selected_segments)]
+                
+                if len(filtered_df) > 0:
+                    fig_dist = plot_distribution(filtered_df, trailing_month, bin_size)
+                    st.pyplot(fig_dist)
+                    
+                    # Add summary statistics
+                    st.write("### Distribution Statistics")
+                    col_name = f'Trailing{trailing_month}'
+                    stats = {
+                        'Mean': f"${filtered_df[col_name].mean():,.2f}",
+                        'Median': f"${filtered_df[col_name].median():,.2f}",
+                        'Standard Deviation': f"${filtered_df[col_name].std():,.2f}",
+                        'Minimum': f"${filtered_df[col_name].min():,.2f}",
+                        'Maximum': f"${filtered_df[col_name].max():,.2f}"
+                    }
+                    st.dataframe(pd.DataFrame([stats]).T.rename(columns={0: 'Value'}))
 
     with tab3:
         st.header("Sample Data Generation")

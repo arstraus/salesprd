@@ -21,13 +21,15 @@ The Sales Ramp Analysis Tool is a sophisticated Streamlit application designed f
 
 ### Key Features
 - Multiple growth model implementations (Linear, Logistic, Gompertz)
-- Interactive data visualization
+- Interactive data visualization with dual analysis views:
+  - Ramp progression analysis
+  - Distribution analysis with configurable parameters
 - Customizable analysis parameters
 - Automated data validation and preprocessing
 - Sample data generation capabilities
 - Cross-segment performance comparison
 - Temporal trend analysis
-- Performance distribution analytics
+- Performance distribution analytics with statistical summary
 
 ### Use Cases
 1. Sales Team Performance Analysis
@@ -57,7 +59,6 @@ streamlit >= 1.0.0
 pandas >= 1.3.0
 numpy >= 1.19.0
 matplotlib >= 3.4.0
-seaborn >= 0.11.0
 scipy >= 1.7.0
 scikit-learn >= 0.24.0
 ```
@@ -242,8 +243,11 @@ def calculate_ramp_time(L, k, x0, ramp_pct):
 2. Analysis Tab
    - Data upload
    - Parameter selection
-   - Visualization display
+   - Dual visualization display
+     - Ramp Analysis
+     - Distribution Analysis
    - Metric calculation
+   - Statistical summaries
 
 3. Sample Generation Tab
    - Parameter configuration
@@ -261,9 +265,11 @@ def calculate_ramp_time(L, k, x0, ramp_pct):
 - Date range selection
 
 #### 2. Analysis Parameters
-- Model type selection
+- Model type selection (Linear, Logistic, Gompertz)
 - Target percentage
 - Time range
+- Trailing month selection
+- Distribution bin size
 - Visualization options
 
 #### 3. Sample Generation Controls
@@ -312,9 +318,9 @@ def calculate_ramp_time(L, k, x0, ramp_pct):
 
 #### 1. Ramp Analysis
 ```python
-def plot_performance(df, cols, plot_type='monthly', segment=None):
+def analyze_ramp(df, segments=None, markets=None, ...):
     """
-    Generates performance visualizations.
+    Analyzes sales ramp patterns and generates metrics.
     """
 ```
 - Components:
@@ -322,18 +328,35 @@ def plot_performance(df, cols, plot_type='monthly', segment=None):
   - Segment means
   - Model fits
   - Achievement markers
+  - Ramp time visualization
+  - Performance metrics table
 
 #### 2. Distribution Analysis
-- Performance distributions
-- Segment comparisons
-- Time-based trends
-- Achievement patterns
+```python
+def plot_distribution(df, trailing_month, bin_size=50):
+    """
+    Generates distribution visualization for trailing bookings.
+    """
+```
+- Components:
+  - Configurable trailing month selection (1-36 months)
+  - Adjustable bin size for granularity control
+  - Frequency distribution histogram
+  - Dual visualization (filled and outline)
+  - Summary statistics
+    - Mean
+    - Median
+    - Standard Deviation
+    - Minimum/Maximum values
 
 ### Interactive Features
 - Zoom capabilities
 - Pan functionality
 - Tooltip information
 - Legend toggling
+- Trailing month selection
+- Bin size adjustment
+- Filter application across visualizations
 
 ## Sample Data Generation
 
@@ -489,6 +512,3 @@ The Sales Ramp Analysis Tool provides a comprehensive solution for analyzing sal
 3. Automated insight generation
 4. Integration capabilities
 5. Performance optimizations
-
-### Support
-For additional support or feature requests, contact the development team or submit issues through the repository's issue tracker.

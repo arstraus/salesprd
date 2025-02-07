@@ -262,6 +262,8 @@ def main():
     
     with tab2:
         st.sidebar.header("📊 Sales Ramp Analysis")
+        if 'uploaded_file' not in locals():
+            st.info("👈 Please upload your sales data CSV file using the sidebar to begin analysis")
         st.sidebar.markdown("### 📥 Get Started")
         template_df = create_sample_template()
         template_csv = template_df.to_csv(index=False).encode('utf-8')
